@@ -9,39 +9,47 @@ import {
   RegisterScreen,
   ResetPasswordScreen,
   Dashboard,
-  HomeScreen,
   ChooseScreen,
   NativeForm,
   NativeHome,
   TouristForm,
+  TouristHome,
 } from "./src/screens";
+import ActivityForm from "./src/screens/logged/native/ActivityForm";
 import { SideMenuContainer } from "./src/screens/shared";
+import { FormHeader } from "./src/customComponents/form";
+import initializeFirebase from "./src/databases/firebaseActions";
 
 const Stack = createStackNavigator();
 
 export default function App() {
+  initializeFirebase();
+  console.disableYellowBox = true;
   return (
     <Provider theme={theme}>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="TouristForm"
+          initialRouteName="StartScreen"
           screenOptions={{
             headerShown: false,
           }}
         >
-          <Stack.Screen name="NativeForm" component={NativeForm} />
           <Stack.Screen
             name="SideMenuContainer"
             component={SideMenuContainer}
           />
+          <Stack.Screen name="NativeForm" component={NativeForm} />
           <Stack.Screen name="TouristForm" component={TouristForm} />
+          <Stack.Screen name="ActivityForm" component={ActivityForm} />
           <Stack.Screen name="NativeHome" component={NativeHome} />
+          <Stack.Screen name="TouristHome" component={TouristHome} />
           <Stack.Screen name="StartScreen" component={StartScreen} />
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           <Stack.Screen name="Dashboard" component={Dashboard} />
-          <Stack.Screen name="HomeScreen" component={HomeScreen} />
           <Stack.Screen name="ChooseScreen" component={ChooseScreen} />
+          <Stack.Screen name="FormHeader" component={FormHeader} />
+
           <Stack.Screen
             name="ResetPasswordScreen"
             component={ResetPasswordScreen}

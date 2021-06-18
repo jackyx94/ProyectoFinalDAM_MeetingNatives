@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 import {
@@ -18,6 +18,24 @@ export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState({ value: "", error: "" });
   const [password, setPassword] = useState({ value: "", error: "" });
 
+  useEffect(() => {
+    //Nos aseguramos de que no haya una sesión activa antes de iniciar una nueva
+    var unSuscribe = firebase.auth().onAuthStateChanged(function (user) {
+      if (user) {
+        firebase
+          .auth()
+          .signOut()
+          .then(() => {
+            console.log("Sign-out successful");
+          })
+          .catch((error) => {
+            console.log("Sign-out error");
+          });
+      }
+    });
+    unSuscribe();
+  }, []);
+
   const onLoginPressed = () => {
     const emailError = emailValidator(email.value);
     const passwordError = passwordValidator(password.value);
@@ -35,25 +53,46 @@ export default function LoginScreen({ navigation }) {
       .auth()
       .signInWithEmailAndPassword(email.value, password.value)
       .then((userCredential) => {
-        // Signed in
         var user = userCredential.user;
-
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "ChooseScreen" }],
-        });
+        if (user) {
+          const dbSt = firebase.firestore();
+          const experiencesRef = dbSt.collection("users").doc(user.email);
+          experiencesRef
+            .get()
+            .then((doc) => {
+              if (doc.data().currentProfile === "native") {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "SideMenuContainer" }],
+                });
+                return;
+              } else {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "SideMenuContainer" }],
+                });
+              }
+              return;
+            })
+            .catch((error) => {
+              console.error("El usuario no tiene perfil establecido", error);
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "ChooseScreen" }],
+              });
+            });
+        } else {
+          console.log("No se ha encontrado usuario logueado");
+        }
       })
       .catch((error) => {
         console.log("LogError: " + error.message + "_Code: " + error.code);
         var errorCode = error.code;
-        var errorMessage = error.message;
         if (errorCode === "auth/wrong-password") {
           setPassword({ ...password, error: "Contraseña incorrecta" });
         } else if (errorCode === "auth/user-not-found") {
           setEmail({ ...email, error: "Este email no tiene cuenta asociada" });
         }
-        //auth/user-not-found
-        //auth/wrong-password
       });
   };
 
@@ -119,7 +158,6 @@ const styles = StyleSheet.create({
   },
   link: {
     fontWeight: "bold",
-    //color: theme.colors.primary,
     color: "#0A75F2",
   },
 });

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Background,
   Logo,
@@ -6,10 +6,13 @@ import {
   Button,
   Paragraph,
 } from "../customComponents";
-import InitializeFirebase from "../databases/firebaseActions";
-//import firebase from "firebase";
+import initializeFirebase from "../databases/firebaseActions";
 
 export default function StartScreen({ navigation }) {
+  useEffect(() => {
+    initializeFirebase();
+  }, []);
+
   return (
     <Background>
       <Logo />
@@ -33,6 +36,3 @@ export default function StartScreen({ navigation }) {
     </Background>
   );
 }
-
-// Inicializamos conexion con firebase
-InitializeFirebase();

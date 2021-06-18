@@ -1,0 +1,39 @@
+{
+  "appData": {
+    "shared": {
+      "languajeChips": {
+        "aleman": { "lengua": "Alemán" },
+        "italiano": { "lengua": "Italiano" },
+        "fances": { "lengua": "Francés" },
+        "español": { "lengua": "Español" },
+        "chino": { "lengua": "Chino" },
+        "ingles": { "lengua": "Inglés" }
+      },
+      "categoryChips": {
+        "aventura": { "categoria": "Aventura", "checked": false },
+        "relax": { "categoria": "Relax", "checked": false },
+        "playa": { "categoria": "Playa", "checked": false },
+        "montaña": { "categoria": "Montaña", "checked": false },
+        "cultura": { "categoria": "Cultura", "checked": false },
+        "entretenimiento": { "categoria": "Entretenimiento", "checked": false }
+      }
+    }
+  },
+  "users": {
+    "individualData": {
+      "registro@gmailcom": {
+        "name": "registro",
+        "password": "registro",
+        "uid": "WvSJrhppBUV6IKwsABXYcvVmkv42"
+      },
+      "xbox@gmailcom": {
+        "name": "mandoxbox",
+        "password": "contraseña",
+        "uid": "5kjbZpwpONNqVMmp0d6ZBXglVoM2"
+      }
+    },
+    "openChats": {
+      "cccvcv": ""
+    }
+  }
+}

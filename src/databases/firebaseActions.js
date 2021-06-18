@@ -1,8 +1,14 @@
 import firebase from "firebase";
+//export default !firebase.apps.length ? firebase.initializeApp(config) : firebase.app();
 
-export default function InitializeFirebase() {
-  firebase.initializeApp(firebaseConnect);
+export default function initializeFirebase() {
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConnect);
+  } else {
+    firebase.app();
+  }
 }
+//funcion para inicializar conexion con firebase
 var firebaseConnect = {
   apiKey: "AIzaSyAb8hIwojMmi6YgR0G2tdytNdwLDFRiob4",
   authDomain: "meeting-natives.firebaseapp.com",

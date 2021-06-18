@@ -1,25 +1,51 @@
-import React, { useState } from "react";
-import { StyleSheet, View, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, ScrollView } from "react-native";
 import { Text, RadioButton } from "react-native-paper";
 import { Button, TextInput } from "../../../customComponents";
 import InputSpinner from "react-native-input-spinner";
-import { Chip } from "react-native-paper";
-import { FormHeader } from "../../../customComponents/formComponents";
+import { FormHeader, CustomChips } from "../../../customComponents";
+import { stringValidator } from "../../../helpers/stringValidator";
+import firebase from "firebase";
 
-export default function TouristProfile({ navigation }) {
-  const [checked, setChecked] = useState("si");
-  const [city, setCity] = useState("");
-  const [newLang, setNewLang] = useState("");
-  const [description, setDescription] = useState("");
-  const [yearsLived, setYearsLived] = useState(1);
-  const [intereses, setIntereses] = useState([
-    { interes: "Aventura", checked: false },
-    { interes: "Relax", checked: false },
-    { interes: "Playa", checked: false },
-    { interes: "Montaña", checked: false },
-    { interes: "Cultura", checked: false },
-    { interes: "Entretenimiento", checked: false },
-  ]);
+export default function TouristProfile({ navigation, route }) {
+  const [checked, setChecked] = useState("yes");
+  const [country, setCountry] = useState({ value: "", error: "" });
+  const [companions, setCompanions] = useState(0);
+  const [intrestedChips, setIntrestedChips] = useState([]);
+
+  const chipStateHandler = (data) => {
+    setIntrestedChips(data);
+  };
+
+  useEffect(() => {
+    const { editingUser, type } = route.params;
+    if (editingUser) {
+      retrievePreviusData(editingUser, type);
+    }
+  }, []);
+
+  async function retrievePreviusData(profileMail, type) {
+    const dbSt = firebase.firestore();
+    const userRef = dbSt.collection("users").doc(profileMail.toString());
+    userRef
+      .collection("typeOfUser")
+      .doc(type.toString())
+      .get()
+      .then((doc) => {
+        setCountry({ value: doc.data().originCountry, error: "" });
+        setIntrestedChips(doc.data().intrestedCategories);
+        if (doc.data().travelCompanions > 0) {
+          setChecked("no");
+        }
+        setCompanions(doc.data().travelCompanions);
+      })
+      .catch((error) => {
+        console.log(
+          "Error al tratar de obtener los datos de perfil previos",
+          error
+        );
+      });
+  }
   const showSpinner = () => {
     if (checked === "no") {
       return (
@@ -33,69 +59,137 @@ export default function TouristProfile({ navigation }) {
             min={1}
             step={1}
             color="#00BFFF"
-            value={yearsLived}
+            value={companions}
             colorPress="#BCBCBC"
             fontSize={16}
             textColor="#696969"
-            onChange={(yearsLived) => {
-              setYearsLived(yearsLived);
+            onChange={(selectedNumb) => {
+              setCompanions(selectedNumb);
             }}
           />
         </View>
       );
     }
   };
-  const addInteres = () => {
-    setIntereses((intereses) => [
-      ...intereses,
-      { interes: newLang, checked: true },
-    ]);
+  const onSaveProfile = () => {
+    const countryError = stringValidator(country.value);
+    if (countryError) {
+      setCountry({ ...country, error: countryError });
+      return;
+    } else {
+      //llamamos a la función que crean la referenciade los datos obtenidos
+      // en firestore
+      createDataRef();
+    }
   };
-  const changeProfileImage = () => {};
 
-  const manageChips = (text) => {
-    console.log(text);
-    var auxArray = intereses.map(function (item) {
-      if (item.interes === text) {
-        if (item.checked === false) {
-          return { ...item, checked: true };
-        } else {
-          return { ...item, checked: false };
-        }
-      } else {
-        return item;
-      }
-    });
-    setIntereses(auxArray);
-  };
-  const showChips = () => {
-    var chips = intereses.map(function (interes) {
-      return (
-        <Chip
-          key={interes.interes}
-          selected={interes.checked}
-          style={styles.chipStyles}
-          onPress={() => manageChips(interes.interes)}
-        >
-          {interes.interes}
-        </Chip>
-      );
-    });
-    return <View style={styles.chipContainer}>{chips}</View>;
-  };
+  function createDataRef() {
+    var user = firebase.auth().currentUser;
+    const dbSt = firebase.firestore();
+    if (user) {
+      dbSt
+        .collection("users")
+        .doc(user.email.toString())
+        .set({
+          followedExperiencesId: [],
+        })
+        .then(() => {
+          console.log("Documento actualizado correctamente");
+        })
+        .catch((error) => {
+          console.error("Error al actualizar el documento: ", error);
+        });
+      dbSt
+        .collection("users")
+        .doc(user.email.toString())
+        .update({
+          currentProfile: "tourist",
+        })
+        .then(() => {
+          console.log("Documento actualizado correctamente");
+        })
+        .catch((error) => {
+          console.error("Error al actualizar el documento: ", error);
+        });
+      dbSt
+        .collection("users")
+        .doc(user.email)
+        .collection("typeOfUser")
+        .doc("tourist")
+        .set({
+          originCountry: country.value,
+          travelCompanions: companions,
+          intrestedCategories: intrestedChips,
+        })
+        .then(() => {
+          console.log("Documento creado correctamente");
+
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "SideMenuContainer" }],
+          });
+        })
+        .catch((error) =>
+          console.error("Error al actualizar documento", error)
+        );
+    }
+  }
+  function updateProfile() {
+    var user = firebase.auth().currentUser;
+    const dbSt = firebase.firestore();
+    dbSt
+      .collection("users")
+      .doc(user.email)
+      .collection("typeOfUser")
+      .doc("tourist")
+      .update({
+        originCountry: country.value,
+        travelCompanions: companions,
+        intrestedCategories: intrestedChips,
+      })
+      .then(() => {
+        console.log("Documento actualizado correctamente");
+        navigation.navigate("SideMenuContainer");
+      })
+      .catch((error) => {
+        console.error("Error al actualizar el documento: ", error);
+      });
+  }
+  function showChips() {
+    const { categories } = route.params;
+    return (
+      <View>
+        {categories ? (
+          <CustomChips
+            parent={"TouristForm"}
+            chipType="categoryChips"
+            handleState={chipStateHandler}
+            fromFirestore={[null, categories]}
+          ></CustomChips>
+        ) : (
+          <CustomChips
+            parent={"TouristForm"}
+            chipType="categoryChips"
+            handleState={chipStateHandler}
+            fromFirestore={null}
+          ></CustomChips>
+        )}
+      </View>
+    );
+  }
   return (
     <ScrollView style={styles.container}>
       {FormHeader(navigation)}
       <View style={styles.body}>
         <Text style={styles.name}>Completa tu perfil</Text>
-        <TouchableOpacity onPress={changeProfileImage()}>
-          <Text style={styles.link}>Cambiar imagen</Text>
-        </TouchableOpacity>
         <TextInput
           label="¿De donde eres?"
           placeholder="Pais de origen"
+          value={country.value}
+          error={!!country.error}
+          errorText={country.error}
           style={styles.inputs}
-          onChangeText={(text) => setCity({ value: text, error: "" })}
+          onChangeText={(text) => setCountry({ value: text, error: "" })}
         ></TextInput>
         <Text style={styles.questions}>¿Viajas solo?</Text>
         <View>
@@ -125,26 +219,19 @@ export default function TouristProfile({ navigation }) {
           Dinos cuales son tus principales intereses cuando viajas
         </Text>
         {showChips()}
-
-        <Text style={styles.questions}>Otro:</Text>
-
-        <View style={styles.addLangContainer}>
-          <TextInput
-            label="Añade otro interés"
-            placeholder="Nuevo interés"
-            onChangeText={(text) => setNewLang(text.toString())}
-            style={styles.inputs}
-          ></TextInput>
-          <Button
-            onPress={() => addInteres()}
-            //style={styles.buttonAdd}
-            //color="#00BFFF"
-            mode="outlined"
-          >
-            Añadir
-          </Button>
-        </View>
-        <Button mode="contained">Guardar perfil</Button>
+        <Button
+          mode="contained"
+          onPress={() => {
+            const { editingUser } = route.params;
+            if (editingUser) {
+              updateProfile();
+            } else {
+              onSaveProfile();
+            }
+          }}
+        >
+          Guardar perfil
+        </Button>
       </View>
     </ScrollView>
   );
@@ -216,14 +303,12 @@ const styles = StyleSheet.create({
     color: "#696969",
   },
   radioQuestion: {
-    // fontSize: 16,
     color: "#696969",
   },
   body: {
     width: "100%",
     marginTop: 40,
     alignItems: "center",
-    //alignSelf: "center",
     justifyContent: "center",
     padding: 30,
   },
@@ -231,6 +316,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 28,
     color: "#696969",
-    //fontWeight: "600",
   },
 });

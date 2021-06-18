@@ -1,126 +1,82 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
   View,
-  Image,
-  Dimensions,
   FlatList,
   KeyboardAvoidingView,
   TextInput,
 } from "react-native";
-const { width, height } = Dimensions.get("window");
-
-export default function Chat() {
+import { Dimensions } from "react-native";
+import firebase from "firebase";
+export default function Chat({ autoScroll, conversationId, parent }) {
   const [msg, setMsg] = useState("");
-  const [messages, setMessages] = useState({
-    all: [
-      {
-        id: 1,
-        sent: true,
-        msg: "Lorem ipsum dolor",
-        image: "../../assets/womanAvatar.png",
-      },
-      {
-        id: 2,
-        sent: true,
-        msg: "sit amet, consectetuer",
-        image: "../../assets/womanAvatar.png",
-      },
-      {
-        id: 3,
-        sent: false,
-        msg: "adipiscing elit. Aenean ",
-        image: "../../assets/manAvatar.png",
-      },
-      {
-        id: 4,
-        sent: true,
-        msg: "commodo ligula eget dolor.",
-        image: "../../assets/womanAvatar.png",
-      },
-      {
-        id: 5,
-        sent: false,
-        msg: "Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes",
-        image: "../../assets/manAvatar.png",
-      },
-      {
-        id: 6,
-        sent: true,
-        msg: "nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo",
-        image: "../../assets/womanAvatar.png",
-      },
-      {
-        id: 7,
-        sent: false,
-        msg: "rhoncus ut, imperdiet",
-        image: "../../assets/manAvatar.png",
-      },
-      {
-        id: 8,
-        sent: false,
-        msg: "a, venenatis vitae",
-        image: "../../assets/manAvatar.png",
-      },
-    ],
-  });
+  const [messages, setMessages] = useState([]);
+  const dbSt = firebase.firestore();
 
-  //   function reply() {
-  //     var messages = this.state.messages;
-  //     messages.push({
-  //       id: Math.floor(Math.random() * 99999999999999999 + 1),
-  //       sent: false,
-  //       msg: this.state.msg,
-  //       image: "../../assets/manAvatar.png",
-  //     });
-  //     this.setState({ msg: "", messages: messages });
-  //   }
+  useEffect(() => {
+    if (dbSt) {
+      const unSuscribe = dbSt
+        .collection("openChats")
+        .doc(conversationId)
+        .collection("messages")
+        .orderBy("sendAt", "desc")
+        .limit(20)
+        .onSnapshot((querySnapshot) => {
+          const data = querySnapshot.docs.map((doc) => ({
+            ...doc.data(),
+            id: doc.id,
+          }));
+          setMessages(data.reverse());
+        });
+      return unSuscribe;
+    }
+  }, [dbSt]);
 
-  //   function send() {
-  //     if (this.state.msg.length > 0) {
-  //       var messages = this.state.messages;
-  //       messages.push({
-  //         id: Math.floor(Math.random() * 99999999999999999 + 1),
-  //         sent: true,
-  //         msg: this.state.msg,
-  //         image: "../../assets/womanAvatar.png",
-  //       });
-  //       this.setState({ messages: messages });
-  //       setTimeout(() => {
-  //         this.reply();
-  //       }, 2000);
-  //     }
-  //   }
-
+  function send() {
+    var user = firebase.auth().currentUser;
+    const dbSt = firebase.firestore();
+    const messagesRef = dbSt
+      .collection("openChats")
+      .doc(conversationId)
+      .collection("messages")
+      .add({
+        value: msg,
+        sendAt: firebase.firestore.FieldValue.serverTimestamp(),
+        sender: parent,
+      });
+    setMsg("");
+  }
+  function goScrollBottom() {
+    setTimeout(() => {
+      autoScroll();
+    }, 400);
+  }
   const renderItem = ({ item }) => {
-    if (item.sent === false) {
+    if (item.sender === parent) {
       return (
-        <View style={styles.eachMsg}>
-          <Image source={{ uri: item.image }} style={styles.userPic} />
-          <View style={styles.msgBlock}>
-            <Text style={styles.msgTxt}>{item.msg}</Text>
+        <View style={styles.rightMsg}>
+          <View style={styles.rightBlock}>
+            <Text style={styles.rightTxt}>{item.value}</Text>
           </View>
         </View>
       );
     } else {
       return (
-        <View style={styles.rightMsg}>
-          <View style={styles.rightBlock}>
-            <Text style={styles.rightTxt}>{item.msg}</Text>
+        <View style={styles.eachMsg}>
+          <View style={styles.leftBlock}>
+            <Text style={styles.msgTxt}>{item.value}</Text>
           </View>
-          <Image source={{ uri: item.image }} style={styles.userPic} />
         </View>
       );
     }
   };
   return (
-    <View style={{ flex: 1 }}>
-      <KeyboardAvoidingView behavior="padding" style={styles.keyboard}>
+    <KeyboardAvoidingView style={styles.keyboard} onFocus={goScrollBottom()}>
+      <View style={{ flex: 1 }}>
         <FlatList
           style={styles.list}
-          //extraData={this.state}
-          data={messages.all}
+          data={messages}
           keyExtractor={(item) => {
             return item.id;
           }}
@@ -128,72 +84,43 @@ export default function Chat() {
         />
         <View style={styles.input}>
           <TextInput
-            style={{ flex: 1 }}
+            onTouchEnd={goScrollBottom()}
+            onKeyPress={goScrollBottom()}
             value={msg}
             placeholderTextColor="#696969"
             onChangeText={(msg) => setMsg(msg)}
             blurOnSubmit={false}
-            //onSubmitEditing={() => send()}
-            placeholder="Type a message"
+            onSubmitEditing={() => send()}
+            placeholder="Escribe un mensaje"
             returnKeyType="send"
           />
         </View>
-      </KeyboardAvoidingView>
-    </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
-
+const windowHeight = Dimensions.get("window").height;
 const styles = StyleSheet.create({
   keyboard: {
     flex: 1,
-    justifyContent: "center",
+    minHeight: windowHeight - 230,
   },
-  image: {
-    width,
-    height,
-  },
-  header: {
-    height: 65,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#075e54",
-  },
-  left: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  right: {
-    flexDirection: "row",
-  },
-  chatTitle: {
-    color: "#fff",
-    fontWeight: "600",
-    margin: 10,
-    fontSize: 15,
-  },
-  chatImage: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    margin: 5,
+  list: {
+    flex: 1,
+    marginBottom: 80,
   },
   input: {
-    flexDirection: "row",
-    alignSelf: "flex-end",
-    padding: 10,
-    height: 40,
-    width: width - 20,
-    backgroundColor: "#fff",
+    position: "absolute",
+    bottom: 10,
+    flex: 1,
+    justifyContent: "center",
+    paddingLeft: 10,
+    height: 50,
+    flex: 1,
+    width: "94%",
+    backgroundColor: "#e3e3e3",
     margin: 10,
-    shadowColor: "#3d3d3d",
-    shadowRadius: 2,
-    shadowOpacity: 0.5,
-    shadowOffset: {
-      height: 1,
-    },
-    borderColor: "#696969",
-    borderWidth: 1,
+    borderRadius: 6,
   },
   eachMsg: {
     flexDirection: "row",
@@ -213,10 +140,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#BCBCBC",
   },
-  msgBlock: {
+  leftBlock: {
     width: 220,
     borderRadius: 5,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#ededed",
     padding: 10,
     shadowColor: "#3d3d3d",
     shadowRadius: 2,
@@ -239,7 +166,6 @@ const styles = StyleSheet.create({
   },
   msgTxt: {
     fontSize: 15,
-    color: "#555",
     fontWeight: "600",
   },
   rightTxt: {

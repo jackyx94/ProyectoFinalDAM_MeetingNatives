@@ -9,20 +9,18 @@ import {
   TextInput,
   BackButton,
 } from "../customComponents";
-import { theme } from "../core/theme";
 import { emailValidator } from "../helpers/emailValidator";
 import { passwordValidator } from "../helpers/passwordValidator";
-import { nameValidator } from "../helpers/nameValidator";
+import { stringValidator } from "../helpers/stringValidator";
 import firebase from "firebase";
-//import * as auth from "@firebase/auth";
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState({ value: "", error: "" });
   const [email, setEmail] = useState({ value: "", error: "" });
   const [password, setPassword] = useState({ value: "", error: "" });
 
-  const onSignUpPressed = (email, password) => {
-    const nameError = nameValidator(name.value);
+  const onSignUpPressed = () => {
+    const nameError = stringValidator(name.value);
     const emailError = emailValidator(email.value);
     const passwordError = passwordValidator(password.value);
     if (emailError || passwordError || nameError) {
@@ -37,25 +35,11 @@ export default function RegisterScreen({ navigation }) {
       createAuth();
       createDataRef();
     }
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Dashboard" }],
-    });
   };
-  //checkedNew = checked.split('.').join("");
-  function createDataRef() {
+  async function createDataRef() {
     var unSuscribe = firebase.auth().onAuthStateChanged(function (user) {
       if (user) {
-        // User is signed in.
-        firebase
-          .database()
-          .ref("users/" + email.value.split(".").join(""))
-          .set({
-            name: name.value,
-            password: password.value,
-            uid: user.uid,
-          });
-        console.log("referenciaRealTimeCreada");
+        createFirestoreDocument(user);
         unSuscribe();
       } else {
         // no hacemos nada, esperamos a a que el observador StateChanged detecte el login
@@ -64,14 +48,27 @@ export default function RegisterScreen({ navigation }) {
       }
     });
   }
+  async function createFirestoreDocument(user) {
+    const dbFire = firebase.firestore();
+    const newUserDocument = await dbFire
+      .collection("users")
+      .doc(user.email)
+      .set({
+        name: name.value,
+        uid: user.uid,
+        currentProfile: "",
+      });
+  }
   function createAuth() {
-    //console.log(email.value + " " + password.value);
     firebase
       .auth()
       .createUserWithEmailAndPassword(email.value, password.value)
       .then(() => {
-        navigation.replace("HomeScreen");
         console.log("Cuenta creada y loggeada");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "ChooseScreen" }],
+        });
       })
       .catch((error) => {
         if (error.code === "auth/email-already-in-use") {
@@ -121,7 +118,7 @@ export default function RegisterScreen({ navigation }) {
       />
       <Button
         mode="contained"
-        onPress={() => onSignUpPressed(email, password)}
+        onPress={() => onSignUpPressed()}
         style={{ marginTop: 24 }}
       >
         Crear cuenta
@@ -143,7 +140,6 @@ const styles = StyleSheet.create({
   },
   link: {
     fontWeight: "bold",
-    //color: theme.colors.primary,
     color: "#0A75F2",
   },
 });

@@ -1,0 +1,48 @@
+{
+  "appData": {
+    "shared": {
+      "languageChips": [
+        "Alemán",
+        "Italiano",
+        "Francés",
+        "Español",
+        "Chino",
+        "Inglés"
+      ],
+      "categoryChips": [
+        "Aventura",
+        "Relax",
+        "Playa",
+        "Montaña",
+        "Cultura",
+        "Entretenimiento"
+      ]
+    }
+  },
+  "users": {
+    "individualData": {
+      "registro@gmailcom": {
+        "name": "registro",
+        "password": "registro",
+        "uid": "WvSJrhppBUV6IKwsABXYcvVmkv42",
+        "nativeProfile": {
+          "active": true,
+          "profileData": {}
+        },
+        "touristProfile": {
+          "active": true,
+          "profileData": {}
+        },
+        "spokenLanguages": []
+      },
+      "xbox@gmailcom": {
+        "name": "mandoxbox",
+        "password": "contraseña",
+        "uid": "5kjbZpwpONNqVMmp0d6ZBXglVoM2"
+      }
+    },
+    "openChats": {
+      "cccvcv": ""
+    }
+  }
+}

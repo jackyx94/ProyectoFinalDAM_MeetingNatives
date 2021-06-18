@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import BackgroundSign from "../customComponents/Background";
-import BackButton from "../customComponents/BackButton";
-import Logo from "../customComponents/Logo";
-import Header from "../customComponents/Header";
-import TextInput from "../customComponents/TextInput";
-import Button from "../customComponents/Button";
+import BackgroundSign from "../customComponents/simple/Background";
+import BackButton from "../customComponents/simple/BackButton";
+import Logo from "../customComponents/simple/Logo";
+import Header from "../customComponents/simple/Header";
+import TextInput from "../customComponents/simple/TextInput";
+import Button from "../customComponents/simple/Button";
 import { emailValidator } from "../helpers/emailValidator";
-
+import firebase from "firebase";
 export default function ResetPasswordScreen({ navigation }) {
   const [email, setEmail] = useState({ value: "", error: "" });
 
@@ -16,6 +16,16 @@ export default function ResetPasswordScreen({ navigation }) {
       setEmail({ ...email, error: emailError });
       return;
     }
+
+    firebase
+      .auth()
+      .sendPasswordResetEmail(email.value)
+      .then(function (user) {
+        alert("Email de restauración enviado");
+      })
+      .catch(function (e) {
+        console.log(e);
+      });
     navigation.navigate("LoginScreen");
   };
 
