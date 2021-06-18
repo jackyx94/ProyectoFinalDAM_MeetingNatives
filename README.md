@@ -2,7 +2,7 @@
 
 Para ejecutar este proyecto en tu máquina local será necesario que sigas los siguientes pasos:
 
-1 - Tendrás que descargar e instalar el entorno de ejecución Node.js . Puedes comrobar que se ha instalado correctamente utilizando el comando "node -v". Si tienes una versión superior a la 14.0 todo debería de ir bien, para versiones anteriores no se garantiza.
+1 - Tendrás que descargar e instalar el entorno de ejecución Node.js . Puedes comrobar que se ha instalado correctamente utilizando el comando "node -v" en la terminal. Si tienes una versión superior a la 14.0 todo debería de ir bien, para versiones anteriores no se garantiza.
 
 2 - Ahora tienes que asegurarte de que el gestor de paquetes NPM se ha instalado junto con Node.js, puedes comprobarlo usando el comando "npm -v" en la terminal. Si tienes una versión superior a la 6.0 todo debería de ir bien, para versiones anteriores no se garantiza.
 
