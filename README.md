@@ -1,4 +1,4 @@
-# ProyectoFinalDAM_MeetingNatives
+# ReactNativeApp_MeetingNatives
 
 Para ejecutar este proyecto en tu máquina local será necesario que sigas los siguientes pasos:
 
